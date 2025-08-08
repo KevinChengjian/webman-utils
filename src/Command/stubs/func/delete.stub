@@ -1,0 +1,8 @@
+    #[RequestMapping(name: '删除')]
+    public function delete(DeleteIdRequest $request): Response
+    {
+        if ({model}::where({model}Do::Id, $request->id)->delete()) {
+            return $this->success();
+        }
+        return $this->error();
+    }

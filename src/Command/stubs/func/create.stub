@@ -1,0 +1,10 @@
+    #[RequestMapping(name: '添加')]
+    public function create({onlyName}StoreRequest $request): Response
+    {
+        $params = $request->withForm();
+        $result = {model}::query()->create($params);
+        if ($result) {
+            return $this->success();
+        }
+        return $this->error();
+    }

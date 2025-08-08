@@ -1,0 +1,15 @@
+{
+  "name": "nasus/webman-utils",
+  "type": "library",
+  "license": "MIT",
+  "description": "Webman plugin nasus/webman-utils",
+  "require": {
+    "symfony/validator": "^7.3",
+    "webman-tech/laravel-validation": "^1.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Nasus\\WebmanUtils\\": "src"
+    }
+  }
+}

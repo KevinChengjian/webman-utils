@@ -1,0 +1,13 @@
+<?php
+
+namespace {namespace};
+
+use Nasus\WebmanUtils\Annotation\RequestMapping;
+use Webman\Http\Response;
+{useNamespace}
+
+#[RequestMapping(name: '', path: '/{router}')]
+class {controllerName} extends BaseController
+{
+{methods}
+}

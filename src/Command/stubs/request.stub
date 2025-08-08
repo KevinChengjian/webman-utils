@@ -1,0 +1,14 @@
+<?php
+
+namespace {namespace};
+
+use Nasus\WebmanUtils\Annotation\ParameterDoc;
+use Symfony\Component\Validator\Constraints\NotBlank;
+
+/**
+{fieldDoc}
+*/
+class {requestName} extends AbstractRequest
+{
+{rules}
+}

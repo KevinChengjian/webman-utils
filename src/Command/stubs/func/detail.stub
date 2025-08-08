@@ -1,0 +1,6 @@
+    #[RequestMapping(name: '查看')]
+    public function detail(DetailIdRequest $request): Response
+    {
+        $detail = {model}::where({model}Do::Id, $request->id)->first();
+        return $this->success($detail);
+    }

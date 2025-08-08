@@ -1,0 +1,12 @@
+    #[RequestMapping(name: '查看')]
+    public function list(PagingRequest $request): Response
+    {
+        $list = {model}::query()
+            ->where(array_filter($request->only([])))
+            ->whenLike($request->only([]))
+            ->whenDate($request->only(['created_at']))
+            ->orderByDesc({model}Do::Id)
+            ->paginate($request->pageSize);
+
+        return $this->paginate($list);
+    }

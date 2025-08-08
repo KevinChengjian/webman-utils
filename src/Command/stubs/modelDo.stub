@@ -1,0 +1,62 @@
+<?php
+
+namespace {namespace}\do;
+
+final class {modelName}Do
+{
+{fieldConst}
+
+    /**
+     * 返回指定字段数组
+     *
+     * @param array $fields
+     * @return array
+     */
+    public static function only(array $fields): array
+    {
+        return empty($fields) ? self::FieldsArray : array_intersect(self::FieldsArray, $fields);
+    }
+
+    /**
+     * 返回指定字段数组，并添加字段前缀
+     *
+     * @param string $prefix
+     * @param array $fields
+     * @return array
+     */
+    public static function onlyPrefix(string $prefix, array $fields): array
+    {
+        $fieldsArr = array_intersect(self::FieldsArray, $fields);
+        foreach ($fieldsArr as $key => $value) {
+            $fieldsArr[$key] = $prefix . '.' . $value;
+        }
+        return $fieldsArr;
+    }
+
+    /**
+     * 排除指定字段
+     *
+     * @param array $fields
+     * @return array
+     */
+    public static function except(array $fields): array
+    {
+        return array_diff(self::FieldsArray, $fields);
+    }
+
+    /**
+     * 排除指定字段
+     *
+     * @param string $prefix
+     * @param array $fields
+     * @return array
+     */
+    public static function exceptPrefix(string $prefix, array $fields): array
+    {
+        $fieldsArr = array_diff(self::FieldsArray, $fields);
+        foreach ($fieldsArr as $key => $value) {
+            $fieldsArr[$key] = $prefix . '.' . $value;
+        }
+        return $fieldsArr;
+    }
+}

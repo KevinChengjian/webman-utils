@@ -1,0 +1,9 @@
+    #[RequestMapping(name: '编辑')]
+    public function update({onlyName}StoreRequest $request, UpdateIdRequest $idRequest): Response
+    {
+        $params = $request->withForm();
+        if ({model}::where({model}Do::Id, $idRequest->id)->update($params)) {
+            return $this->success();
+        }
+        return $this->error();
+    }

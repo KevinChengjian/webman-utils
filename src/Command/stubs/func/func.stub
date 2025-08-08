@@ -1,0 +1,5 @@
+    #[RequestMapping(name: '')]
+    public function {name}(Request $request): Response
+    {
+        return $this->success();
+    }

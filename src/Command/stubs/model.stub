@@ -1,0 +1,48 @@
+<?php
+
+namespace {namespace};
+
+{useNamespace}
+
+/**
+{fieldDoc}
+ */
+class {modelName} extends BasicModel
+{{useTrait}
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    const TABLE = '{tableName}';
+{const}
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = '{tableName}';
+{property}
+    /**
+     * Automatic generation cannot be modified
+     *
+     * @param array $fields
+     * @return Builder
+     */
+    public static function fields(array $fields = []): Builder
+    {
+        return self::query()->select({modelName}Do::only($fields));
+    }
+
+    /**
+     * Automatic generation cannot be modified
+     *
+     * @param array $fields
+     * @return Builder
+     */
+    public static function fieldsEx(array $fields = []): Builder
+    {
+        return self::query()->select({modelName}Do::except($fields));
+    }
+{customMethod}
+}
