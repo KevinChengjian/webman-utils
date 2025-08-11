@@ -15,11 +15,14 @@ class ParameterDoc
 
     public string $desc;
 
-    public function __construct(string $field, string $name, string $type = '', string $desc = '')
+    public array $doc;
+
+    public function __construct(string $field, string $name, string $type = '', string $desc = '', array $doc = [])
     {
         $this->field = $field;
         $this->name = $name;
         $this->type = $type;
         $this->desc = $desc;
+        $this->doc = $doc;
     }
 }

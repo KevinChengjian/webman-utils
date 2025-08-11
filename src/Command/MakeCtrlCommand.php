@@ -4,12 +4,10 @@ namespace Nasus\WebmanUtils\Command;
 
 use Nasus\WebmanUtils\Utils\Helper;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand('make:ctrl', 'Make Controller')]
@@ -43,7 +41,11 @@ class MakeCtrlCommand extends BaseCommand
         $modelNamespace = config(sprintf('%s.database.connections.%s.model', self::ConfigPrefix, $this->connection));
         $requestNamespace = config(sprintf('%s.database.connections.%s.request', self::ConfigPrefix, $this->connection));
 
-        $useNamespace = [];
+        $useNamespace = [
+            'use Nasus\WebmanUtils\Annotation\RequestMapping;',
+            'use Webman\Http\Response;',
+        ];
+
         $addRequest = [];
         if (!empty($input->getOption('model'))) {
             $model = Helper::SnakeToCamel($input->getOption('model'));
@@ -95,14 +97,19 @@ class MakeCtrlCommand extends BaseCommand
         $ctrlMethod = str_replace('{model}', empty($model) ? '' : $model, $ctrlMethod);
         $tmpl = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'stubs' . DIRECTORY_SEPARATOR . 'controller.stub');
         $tmpl = str_replace('{namespace}', $ctrlNamespace, $tmpl);
+        asort($useNamespace);
         $tmpl = str_replace('{useNamespace}', implode(PHP_EOL, array_unique($useNamespace)), $tmpl);
         $tmpl = str_replace('{controllerName}', $ctrlName, $tmpl);
+        $tmpl = str_replace('{namespace}', $ctrlNamespace, $tmpl);
+        $tmpl = str_replace('{router}', Helper::humpToCL($onlyName), $tmpl);
         $tmpl = str_replace('{onlyName}', $onlyName, $tmpl);
         $tmpl = str_replace('{methods}', $ctrlMethod, $tmpl);
 
         $ctrlPath = str_replace('\\', DIRECTORY_SEPARATOR, $ctrlNamespace . DIRECTORY_SEPARATOR);
         !file_exists($ctrlPath) && @mkdir($ctrlPath, 0777, true);
         file_put_contents(base_path($ctrlPath . DIRECTORY_SEPARATOR . $ctrlName . '.php'), $tmpl);
+
+        $output->write('<info>Successfully created the ' .$ctrlName . '</info>');
         return self::SUCCESS;
     }
 }

@@ -4,7 +4,6 @@ namespace Nasus\WebmanUtils\Request;
 
 use Nasus\WebmanUtils\Annotation\ParameterDoc;
 use Nasus\WebmanUtils\Exception\ValidateException;
-use Nasus\WebmanUtils\Utils\Helper;
 use ReflectionClass;
 use ReflectionProperty;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
@@ -26,6 +25,8 @@ abstract class AbstractRequest
      */
     protected static array $fields = [];
 
+    protected array $rules = [];
+
     public function __construct()
     {
         if (!isset(self::$fields[static::class])) {
@@ -33,6 +34,7 @@ abstract class AbstractRequest
         }
 
         foreach (self::$fields[static::class] as $property => $field) {
+            $this->rules[] = $field;
             $this->{$property} = request()->input($field);
         }
 
@@ -79,7 +81,7 @@ abstract class AbstractRequest
      */
     public function withForm(array $keys = []): array
     {
-        $keys = empty($keys) ? array_keys(static::$rules) : $keys;
+        $keys = empty($keys) ? array_keys($this->rules) : $keys;
         return \request()->only($keys);
     }
 
@@ -89,7 +91,7 @@ abstract class AbstractRequest
      */
     public function withFormExcept(array $keys = []): array
     {
-        $keys = empty($keys) ? array_keys(static::$rules) : $keys;
+        $keys = empty($keys) ? $this->rules : array_diff($this->rules, $keys);
         return \request()->only($keys);
     }
 
