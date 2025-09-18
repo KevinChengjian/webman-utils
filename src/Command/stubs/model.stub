@@ -14,7 +14,7 @@ class {modelName} extends BasicModel
      *
      * @var string
      */
-    const TABLE = '{tableName}';
+    const string TABLE = '{tableName}';
 {const}
     /**
      * The table associated with the model.

@@ -2,6 +2,10 @@
 
 namespace {namespace};
 
+use Nasus\WebmanUtils\Annotation\RequestMapping;
+use {baseNamespace}\BaseController;
+use support\Request;
+use Webman\Http\Response;
 {useNamespace}
 
 #[RequestMapping(name: '', path: '/{router}')]

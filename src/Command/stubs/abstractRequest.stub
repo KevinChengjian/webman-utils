@@ -1,0 +1,19 @@
+<?php
+
+namespace {namespace};
+
+use Nasus\WebmanUtils\Exception\ValidateException;
+use Nasus\WebmanUtils\Request\AbstractRequest as Request;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+
+class AbstractRequest extends Request
+{
+    /**
+     * @param ConstraintViolationListInterface $validator
+     * @return mixed
+     */
+    protected function failedValidation(ConstraintViolationListInterface $validator): mixed
+    {
+        throw new ValidateException($validator->get(0)->getMessage());
+    }
+}

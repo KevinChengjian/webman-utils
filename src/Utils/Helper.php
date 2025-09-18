@@ -11,7 +11,7 @@ class Helper
      * @param string $path
      * @return string
      */
-    public static function pluginPath(string $path = ''): string
+    public static function pluginPath(string $path): string
     {
         return base_path('plugin' . DIRECTORY_SEPARATOR . $path);
     }

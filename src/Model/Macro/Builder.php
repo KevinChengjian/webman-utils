@@ -69,16 +69,5 @@ class Builder implements Bootstrap
                     return $builder->orderBy($field, $sortOrder == 'ascend' ? 'asc' : 'desc');
                 });
         });
-
-        DbBuilder::macro('whenWhereIn', function ($params = [], $prefix = null) {
-            $params = array_filter($params);
-            return $this->when(!empty($params), function (DbBuilder $builder) use ($prefix, $params) {
-                foreach ($params as $key => $value) {
-                    $field = is_null($prefix) ? $key : sprintf('%s.%s', $prefix, $key);
-                    $builder = $builder->whereIn($field, $value);
-                }
-                return $builder;
-            });
-        });
     }
 }

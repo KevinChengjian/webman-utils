@@ -4,6 +4,7 @@ namespace {namespace};
 
 use Nasus\WebmanUtils\Annotation\ParameterDoc;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use {baseNamespace}\AbstractRequest;
 
 /**
 {fieldDoc}

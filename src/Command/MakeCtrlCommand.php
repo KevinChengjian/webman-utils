@@ -4,62 +4,26 @@ namespace Nasus\WebmanUtils\Command;
 
 use Nasus\WebmanUtils\Utils\Helper;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand('make:ctrl', 'Make Controller')]
 class MakeCtrlCommand extends BaseCommand
 {
     /**
-     * 模块名称
-     * @var string
-     */
-    protected string $module;
-
-    /**
-     * 控制器
-     * @var string
-     */
-    protected string $ctrlNamespace;
-
-    /**
-     * 模型
-     * @var string
-     */
-    protected string $modelNamespace;
-
-    /**
-     * 验证器
-     * @var string
-     */
-    protected string $requestNamespace;
-
-    /**
      * @return void
      */
-    protected function configure(): void
+    protected function configure()
     {
+        parent::configure();
         $this->addArgument('name', InputArgument::REQUIRED, 'controller name');
         $this->addArgument('methods', InputArgument::IS_ARRAY, 'controller methods');
         $this->addOption('model', 'm', InputOption::VALUE_OPTIONAL, 'model name');
-        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'database connection');
-    }
-
-    /**
-     * @param InputInterface $input
-     * @return void
-     */
-    protected function initConfig(InputInterface $input): void
-    {
-        $this->connection = $this->module = $input->getOption('connection') ?? config(sprintf('%s.database.default', self::ConfigPrefix));
-        $config = config(sprintf('%s.database.connections.%s', self::ConfigPrefix, $this->connection));
-
-        $this->ctrlNamespace = $config['controller'];
-        $this->modelNamespace = $config['model'];
-        $this->requestNamespace = $config['request'];
     }
 
     /**
@@ -69,27 +33,17 @@ class MakeCtrlCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->initConfig($input);
+        $this->initConf($input);
 
-        $useNamespace = [
-            'use Nasus\WebmanUtils\Annotation\RequestMapping;',
-            'use Webman\Http\Response;',
-        ];
+        $name = Helper::SnakeToCamel($input->getArgument('name'));
+        $name = str_ends_with($name, 'Controller') ? $name : $name . 'Controller';
 
-        $ctrlNameArr = explode('/', $input->getArgument('name'));
-        if (count($ctrlNameArr) > 1) {
-            array_unshift($useNamespace, 'use ' . $this->ctrlNamespace . '\BaseController;');
-        }
+        $module = $this->module($name);
+        $ctrlNamespace = empty($module) ? $this->controllerNamespace : sprintf('%s\\%s', $this->controllerNamespace, $module);
+        $requestNamespace = empty($module) ? $this->requestNamespace : sprintf('%s\\%s', $this->requestNamespace, $module);
+        $ctrlName = basename($name);
 
-        $ctrlName = array_pop($ctrlNameArr);
-        $ctrlName = Helper::SnakeToCamel($ctrlName);
-        if (!str_ends_with($ctrlName, 'Controller')) {
-            $ctrlName = $ctrlName . 'Controller';
-        }
-
-        $routerPrefix = implode('/', $ctrlNameArr);
-        $this->ctrlNamespace = implode('\\', array_merge([$this->ctrlNamespace], $ctrlNameArr));
-
+        $useNamespace = [];
         $addRequest = [];
         if (!empty($input->getOption('model'))) {
             $model = Helper::SnakeToCamel($input->getOption('model'));
@@ -110,11 +64,11 @@ class MakeCtrlCommand extends BaseCommand
                 $useNamespace[] = 'use Nasus\WebmanUtils\Request\PagingRequest;';
                 $ctrlMethod .= file_get_contents($funcPath . 'list.stub');
             } else if ($method == 'create') {
-                $useNamespace[] = sprintf('use %s\\%sStoreRequest;', $this->requestNamespace, $onlyName);
+                $useNamespace[] = sprintf('use %s\\%sStoreRequest;', $requestNamespace, $onlyName);
                 $ctrlMethod .= str_replace('{onlyName}', $onlyName, file_get_contents($funcPath . 'create.stub'));
                 $addRequest[] = $onlyName . 'StoreRequest';
             } else if ($method == 'update') {
-                $useNamespace[] = sprintf('use %s\\%sStoreRequest;', $this->requestNamespace, $onlyName);
+                $useNamespace[] = sprintf('use %s\\%sStoreRequest;', $requestNamespace, $onlyName);
                 $useNamespace[] = 'use Nasus\WebmanUtils\Request\UpdateIdRequest;';
                 $ctrlMethod .= str_replace('{onlyName}', $onlyName, file_get_contents($funcPath . 'update.stub'));
                 $addRequest[] = $onlyName . 'StoreRequest';
@@ -134,26 +88,24 @@ class MakeCtrlCommand extends BaseCommand
 
         $command = $this->getApplication()->find('make:request');
         foreach (array_unique($addRequest) as $name) {
-            $a = $command->run(new ArrayInput(['name' => $name, '-m' => $input->getOption('model')]), $output);
-            dump($a);
+            $rn = empty($module) ? $name : $module . '/' . $name;
+            $a = $command->run(new ArrayInput(['name' => $rn, '-m' => $input->getOption('model')]), $output);
         }
 
         $ctrlMethod = str_replace('{model}', empty($model) ? '' : $model, $ctrlMethod);
         $tmpl = file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . 'stubs' . DIRECTORY_SEPARATOR . 'controller.stub');
-        $tmpl = str_replace('{namespace}', $this->ctrlNamespace, $tmpl);
-        asort($useNamespace);
+        $tmpl = str_replace('{namespace}', $ctrlNamespace, $tmpl);
+        $tmpl = str_replace('{baseNamespace}', $this->controllerNamespace, $tmpl);
         $tmpl = str_replace('{useNamespace}', implode(PHP_EOL, array_unique($useNamespace)), $tmpl);
         $tmpl = str_replace('{controllerName}', $ctrlName, $tmpl);
-        $tmpl = str_replace('{namespace}', $this->ctrlNamespace, $tmpl);
-        $tmpl = str_replace('{router}', ltrim($routerPrefix . '/'. Helper::humpToCL($onlyName), '/'), $tmpl);
+        $router = $rn = empty($module) ? $name : $module . '/' . Helper::humpToCL($name);
+        $tmpl = str_replace('{router}', $router, $tmpl);
         $tmpl = str_replace('{onlyName}', $onlyName, $tmpl);
         $tmpl = str_replace('{methods}', $ctrlMethod, $tmpl);
 
-        $ctrlPath = str_replace('\\', DIRECTORY_SEPARATOR, $this->ctrlNamespace . DIRECTORY_SEPARATOR);
+        $ctrlPath = str_replace('\\', DIRECTORY_SEPARATOR, $ctrlNamespace . DIRECTORY_SEPARATOR);
         !file_exists($ctrlPath) && @mkdir($ctrlPath, 0777, true);
         file_put_contents(base_path($ctrlPath . DIRECTORY_SEPARATOR . $ctrlName . '.php'), $tmpl);
-
-        $output->write('<info>Successfully created the ' . $ctrlName . '</info>');
         return self::SUCCESS;
     }
 }

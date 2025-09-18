@@ -40,8 +40,8 @@ class MakeDaoCommand extends BaseCommand
      */
     protected function configure(): void
     {
+        parent::configure();
         $this->addOption('table', 't', InputOption::VALUE_OPTIONAL, 'table name');
-        $this->addOption('connection', 'c', InputOption::VALUE_OPTIONAL, 'database connection');
     }
 
     /**
@@ -52,16 +52,16 @@ class MakeDaoCommand extends BaseCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->connection = $input->getOption('connection') ?? config(sprintf('%s.database.default', self::ConfigPrefix));
+        $this->initConf($input);
+
         $this->getTables($input, $output);
         if (empty($this->tables)) return self::SUCCESS;
 
-        $namespace = config(sprintf('%s.database.connections.%s.model', self::ConfigPrefix, $this->connection));
         foreach ($this->tables as $table) {
             $tableColumns = $this->db()->select('SHOW FULL COLUMNS FROM ' . $table);
             $modelName = Helper::SnakeToCamel($table);
-            $this->generativeModel($namespace, $modelName, $table, $tableColumns);
-            $this->generativeModelDo($namespace, $modelName, $table, $tableColumns);
+            $this->generativeModel($this->modelNamespace, $modelName, $table, $tableColumns);
+            $this->generativeModelDo($this->modelNamespace, $modelName, $table, $tableColumns);
         }
 
         return self::SUCCESS;
